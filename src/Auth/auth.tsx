@@ -1,43 +1,47 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { auth } from '../firebase'
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from 'firebase/auth'
 
-
+interface UserForm {
+    email: string
+    password: string
+}
 
 export const Auth = () => {
 
     const mailRegex: string = "/^(([^<>()[].,;:s@\"]+(.[^<>()[].,;:s@\"]+)*)|(\".+\"))@(([^<>()[].,;:s@\"]+.)+[^<>()[].,;:s@\"]{2,})$/i;";
-    const emailRef = useRef<HTMLInputElement>(null);
-    const passwordRef = useRef<HTMLInputElement>(null);
-    const user: User | null = auth.currentUser;
-    const [email, SetEmail] = useState<string>("");
-    const [authState, SetAuthState] = useState<string>("Your are not logged in");
+    const [user, SetUser] = useState<UserForm>({ email: "", password: '' });
     let emailBoolean: boolean = false;
+
+    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        SetUser({ ...user, password: e.target.value });
+        console.log(user.password)
+    }
 
     const checkMail = (email: string): boolean => {
         const validateEmail = email.match(mailRegex) ? true : false;
         return validateEmail
-    };
+    }
 
     const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        SetEmail(e.target.value);
-        emailBoolean = checkMail(email);
-    };
+        SetUser({ ...user, email: e.target.value });
+        console.log(user.email)
+
+        emailBoolean = checkMail(user.email);
+    }
 
     onAuthStateChanged(auth, async (user: User | null) => {
         if (user) {
-            SetAuthState("you are logged in !")
+            console.log(user)
         } else {
-            console.log("not logged")
+            console.log(user)
         }
     });
 
     const signIn = async (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault
-        const email = emailRef.current?.value || ""
-        const password = passwordRef.current?.value || ""
         try {
-            await createUserWithEmailAndPassword(auth, email, password)
+            await createUserWithEmailAndPassword(auth, user.email, user.password)
         }
         catch (err) {
             console.log(err);
@@ -45,10 +49,8 @@ export const Auth = () => {
     };
     const logIn = async (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault
-        const email = emailRef.current?.value || ""
-        const password = passwordRef.current?.value || ""
         try {
-            await signInWithEmailAndPassword(auth, email, password)
+            await signInWithEmailAndPassword(auth, user.email, user.password)
         }
         catch (err) {
             console.log(err);
@@ -66,17 +68,14 @@ export const Auth = () => {
 
     return (
         <>
-            <div>
-                <span>{authState}</span>
-            </div>
             <form>
                 <div>
                     <label htmlFor="email">Email:</label>
-                    <input onChange={handleEmailChange} ref={emailRef} type="email" id="email" name="email" autoComplete="email" required />
+                    <input onChange={handleEmailChange} type="email" id="email" name="email" autoComplete="email" required />
                 </div>
                 <div>
                     <label htmlFor="password">Password:</label>
-                    <input ref={passwordRef} type="password" id="password" name="password" autoComplete="current-password" required />
+                    <input onChange={handlePasswordChange} type="password" id="password" name="password" autoComplete="current-password" required />
                 </div>
                 <button onClick={signIn} disabled={emailBoolean} type="submit">Sign in</button>
                 <button onClick={logIn} disabled={emailBoolean} type="submit">Log in</button>

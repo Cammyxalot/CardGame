@@ -11,11 +11,12 @@ export const Auth = () => {
 
     const mailRegex: string = "/^(([^<>()[].,;:s@\"]+(.[^<>()[].,;:s@\"]+)*)|(\".+\"))@(([^<>()[].,;:s@\"]+.)+[^<>()[].,;:s@\"]{2,})$/i;";
     const [user, SetUser] = useState<UserForm>({ email: "", password: '' });
+    const [authState, setAuthState] = useState<string>("You are not logged in");
+    const [authBoolean, setAuthBoolean] = useState<boolean>(false);
     let emailBoolean: boolean = false;
 
     const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         SetUser({ ...user, password: e.target.value });
-        console.log(user.password)
     }
 
     const checkMail = (email: string): boolean => {
@@ -25,21 +26,20 @@ export const Auth = () => {
 
     const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         SetUser({ ...user, email: e.target.value });
-        console.log(user.email)
 
         emailBoolean = checkMail(user.email);
     }
 
     onAuthStateChanged(auth, async (user: User | null) => {
         if (user) {
-            console.log(user)
+            setAuthBoolean(true)
+            setAuthState("You are logged !")
         } else {
-            console.log(user)
+            setAuthBoolean(true)
         }
     });
 
-    const signIn = async (event: React.MouseEvent<HTMLButtonElement>) => {
-        event.preventDefault
+    const signIn = async () => {
         try {
             await createUserWithEmailAndPassword(auth, user.email, user.password)
         }
@@ -47,8 +47,7 @@ export const Auth = () => {
             console.log(err);
         }
     };
-    const logIn = async (event: React.MouseEvent<HTMLButtonElement>) => {
-        event.preventDefault
+    const logIn = async () => {
         try {
             await signInWithEmailAndPassword(auth, user.email, user.password)
         }
@@ -56,8 +55,7 @@ export const Auth = () => {
             console.log(err);
         }
     };
-    const logOut = async (event: React.MouseEvent<HTMLButtonElement>) => {
-        event.preventDefault
+    const logOut = async () => {
         try {
             await signOut(auth)
         }
@@ -68,6 +66,7 @@ export const Auth = () => {
 
     return (
         <>
+            <div><span>{authState}</span></div>
             <form>
                 <div>
                     <label htmlFor="email">Email:</label>
@@ -79,8 +78,10 @@ export const Auth = () => {
                 </div>
                 <button onClick={signIn} disabled={emailBoolean} type="submit">Sign in</button>
                 <button onClick={logIn} disabled={emailBoolean} type="submit">Log in</button>
+                {!authBoolean &&
+                    <button onClick={logOut}>Log out</button>
+                }
             </form>
-            <button onClick={logOut}>Log out</button>
         </>
     )
 }
